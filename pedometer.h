@@ -13,11 +13,13 @@ class IirFilter {
 
   static const struct IirCoeff coeffLowPass0HZ;
   static const struct IirCoeff coeffLowPass5HZ;
+  static const struct IirCoeff coeffHighPass1HZ;
 };
 
 class Processor {
  public:
   void EliminateJumpyPeaks(std::vector<double> &acc);
+  void EliminateSlowPeaks(std::vector<double> &acc);
 
  private:
   IirFilter filter;
@@ -35,7 +37,7 @@ class Pedometer {
 
   // The frontend will uses these membersto showcase the intermediate results
   std::array<std::vector<double>, 3> accUser, accGravity;
-  std::vector<double> accOrigin, accNoJumpyPeaks;
+  std::vector<double> accOrigin, accNoJumpyPeaks, accNoSlowPeaks;
 
   std::vector<double> acc;
 

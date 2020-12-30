@@ -16,6 +16,10 @@ const struct IirCoeff IirFilter::coeffLowPass5HZ = {
     {1, -1.80898117793047, 0.827224480562408},
     {0.095465967120306, -0.172688631608676, 0.095465967120306}};
 
+const struct IirCoeff IirFilter::coeffHighPass1HZ = {
+    {1, -1.905384612118461, 0.910092542787947},
+    {0.953986986993339, -1.907503180919730, 0.953986986993339}};
+
 std::vector<double> IirFilter::Filter(const std::vector<double> &data,
                                       const struct IirCoeff &coeff) {
   std::vector<double> result(data.size());
@@ -32,6 +36,10 @@ std::vector<double> IirFilter::Filter(const std::vector<double> &data,
 
 void Processor::EliminateJumpyPeaks(std::vector<double> &acc) {
   acc = filter.Filter(acc, IirFilter::coeffLowPass5HZ);
+}
+
+void Processor::EliminateSlowPeaks(std::vector<double> &acc) {
+  acc = filter.Filter(acc, IirFilter::coeffHighPass1HZ);
 }
 
 // Combined (User and Gravity) acceleration, with 3 dimensions separated.
@@ -68,6 +76,8 @@ void Pedometer::IsolateUserComponentAtGravityDirection(
 void Pedometer::Process() {
   processor.EliminateJumpyPeaks(acc);
   accNoJumpyPeaks = acc;
+  processor.EliminateSlowPeaks(acc);
+  accNoSlowPeaks = acc;
 }
 
 PYBIND11_MODULE(_pedometer, m) {
@@ -77,5 +87,6 @@ PYBIND11_MODULE(_pedometer, m) {
       .def_readonly("accUser", &Pedometer::accUser)
       .def_readonly("accGravity", &Pedometer::accGravity)
       .def_readonly("accOrigin", &Pedometer::accOrigin)
-      .def_readonly("accNoJumpyPeaks", &Pedometer::accNoJumpyPeaks);
+      .def_readonly("accNoJumpyPeaks", &Pedometer::accNoJumpyPeaks)
+      .def_readonly("accNoSlowPeaks", &Pedometer::accNoSlowPeaks);
 }

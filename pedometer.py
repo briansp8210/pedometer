@@ -56,11 +56,14 @@ fig.savefig("1.png", dpi=100)
 
 pdm.Process()
 
-fig, (pltAccOrigin, pltAccNoJumpyPeaks) = plt.subplots(2, sharex='col')
+fig, (pltAccOrigin, pltAccNoJumpyPeaks,
+      pltAccNoSlowPeaks) = plt.subplots(3, sharex='col')
 fig.set_size_inches(19.2, 10.8, forward=True)
 PlotAcceleration(pltAccOrigin, 'Origin', t, pdm.accOrigin)
 PlotAcceleration(pltAccNoJumpyPeaks, 'After eliminating jumpy peaks',
                  t, pdm.accNoJumpyPeaks)
+PlotAcceleration(pltAccNoSlowPeaks, 'After eliminating slow peaks',
+                 t, pdm.accNoSlowPeaks)
 fig.tight_layout()
 fig.show()
 fig.savefig("2.png", dpi=100)
