@@ -12,6 +12,15 @@ class IirFilter {
                              const struct IirCoeff &coeff);
 
   static const struct IirCoeff coeffLowPass0HZ;
+  static const struct IirCoeff coeffLowPass5HZ;
+};
+
+class Processor {
+ public:
+  void EliminateJumpyPeaks(std::vector<double> &acc);
+
+ private:
+  IirFilter filter;
 };
 
 class Pedometer {
@@ -22,9 +31,13 @@ class Pedometer {
   // Combined (User and Gravity) acceleration, with 3 dimensions separated.
   Pedometer(const std::array<std::vector<double>, 3> &data);
 
+  void Process();
+
+  // The frontend will uses these membersto showcase the intermediate results
   std::array<std::vector<double>, 3> accUser, accGravity;
-  // User acceleration component at gravity direction
-  std::vector<double> accOrigin;
+  std::vector<double> accOrigin, accNoJumpyPeaks;
+
+  std::vector<double> acc;
 
  private:
   void IsolateUserComponentAtGravityDirection(
@@ -32,4 +45,5 @@ class Pedometer {
       const std::array<std::vector<double>, 3> &accGravity);
 
   IirFilter filter;
+  Processor processor;
 };

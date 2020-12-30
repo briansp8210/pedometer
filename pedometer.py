@@ -19,6 +19,14 @@ def PlotAccelerations(plot, title, t, x, y, z):
                               np.ceil(max(max(x), max(y), max(z))), 0.5))
 
 
+def PlotAcceleration(plot, title, t, a):
+    plot.title.set_text(title)
+    plot.plot(t, a, label='a')
+    plot.legend(loc='upper left', shadow=True, fontsize='small')
+    plot.set_xticks(np.arange(np.floor(min(t)), np.ceil(max(t)), 100))
+    plot.set_yticks(np.arange(np.floor(min(a)), np.ceil(max(a)), 0.5))
+
+
 if len(sys.argv) < 2:
     sys.exit('Usage: python3 pedometer.py <FILE>')
 
@@ -33,16 +41,26 @@ with open(sys.argv[1]) as f:
         y.append(float(sample[2]))
         z.append(float(sample[3]))
 
+pdm = _pedometer.Pedometer([x, y, z])
+
 fig, (pltData, pltAccUser, pltAccGravity) = plt.subplots(3, sharex='col')
 fig.set_size_inches(19.2, 10.8, forward=True)
-
-pdm = _pedometer.Pedometer([x, y, z])
 PlotAccelerations(pltData, 'Input acceleration', t, x, y, z)
 PlotAccelerations(pltAccUser, 'User acceleration',
                   t, pdm.accUser[0], pdm.accUser[1], pdm.accUser[2])
 PlotAccelerations(pltAccGravity, 'Gravity acceleration',
                   t, pdm.accGravity[0], pdm.accGravity[1], pdm.accGravity[2])
-
 fig.tight_layout()
 fig.show()
 fig.savefig("1.png", dpi=100)
+
+pdm.Process()
+
+fig, (pltAccOrigin, pltAccNoJumpyPeaks) = plt.subplots(2, sharex='col')
+fig.set_size_inches(19.2, 10.8, forward=True)
+PlotAcceleration(pltAccOrigin, 'Origin', t, pdm.accOrigin)
+PlotAcceleration(pltAccNoJumpyPeaks, 'After eliminating jumpy peaks',
+                 t, pdm.accNoJumpyPeaks)
+fig.tight_layout()
+fig.show()
+fig.savefig("2.png", dpi=100)

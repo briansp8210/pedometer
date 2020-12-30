@@ -12,6 +12,10 @@ const struct IirCoeff IirFilter::coeffLowPass0HZ = {
     {1, -1.979133761292768, 0.979521463540373},
     {0.000086384997973502, 0.000172769995947004, 0.000086384997973502}};
 
+const struct IirCoeff IirFilter::coeffLowPass5HZ = {
+    {1, -1.80898117793047, 0.827224480562408},
+    {0.095465967120306, -0.172688631608676, 0.095465967120306}};
+
 std::vector<double> IirFilter::Filter(const std::vector<double> &data,
                                       const struct IirCoeff &coeff) {
   std::vector<double> result(data.size());
@@ -24,6 +28,10 @@ std::vector<double> IirFilter::Filter(const std::vector<double> &data,
                  result[i - 2] * coeff.alpha[2]);
   }
   return result;
+}
+
+void Processor::EliminateJumpyPeaks(std::vector<double> &acc) {
+  acc = filter.Filter(acc, IirFilter::coeffLowPass5HZ);
 }
 
 // Combined (User and Gravity) acceleration, with 3 dimensions separated.
@@ -45,21 +53,29 @@ void Pedometer::IsolateUserComponentAtGravityDirection(
     const std::array<std::vector<double>, 3> &accUser,
     const std::array<std::vector<double>, 3> &accGravity) {
   size_t sampleNums = accUser[0].size();
-  accOrigin.reserve(sampleNums);
+  acc.reserve(sampleNums);
   for (size_t i = 0; i < sampleNums; ++i) {
     // auto gravity = std::sqrt(std::pow(accGravity[0][i], 2) +
     //                          std::pow(accGravity[1][i], 2) +
     //                          std::pow(accGravity[2][i], 2));
-    accOrigin.push_back(accUser[0][i] * accGravity[0][i] +
-                        accUser[1][i] * accGravity[1][i] +
-                        accUser[2][i] * accGravity[2][i]);
+    acc.push_back(accUser[0][i] * accGravity[0][i] +
+                  accUser[1][i] * accGravity[1][i] +
+                  accUser[2][i] * accGravity[2][i]);
   }
+  accOrigin = acc;
+}
+
+void Pedometer::Process() {
+  processor.EliminateJumpyPeaks(acc);
+  accNoJumpyPeaks = acc;
 }
 
 PYBIND11_MODULE(_pedometer, m) {
   py::class_<Pedometer>(m, "Pedometer")
       .def(py::init<const std::array<std::vector<double>, 3> &>())
+      .def("Process", &Pedometer::Process)
       .def_readonly("accUser", &Pedometer::accUser)
       .def_readonly("accGravity", &Pedometer::accGravity)
-      .def_readonly("accOrigin", &Pedometer::accOrigin);
+      .def_readonly("accOrigin", &Pedometer::accOrigin)
+      .def_readonly("accNoJumpyPeaks", &Pedometer::accNoJumpyPeaks);
 }
