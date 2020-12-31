@@ -80,10 +80,27 @@ void Pedometer::Process() {
   accNoSlowPeaks = acc;
 }
 
+size_t Pedometer::CountSteps() {
+  size_t count = 0;
+  bool enableCount = true;
+  for (size_t t = 1; t < acc.size(); ++t) {
+    if (enableCount && acc[t] >= kStepAccelerationHighThreShold &&
+        acc[t - 1] < kStepAccelerationHighThreShold) {
+      ++count;
+      enableCount = false;
+    } else if (!enableCount && acc[t] <= kStepAccelerationLowThreShold &&
+               acc[t - 1] > kStepAccelerationLowThreShold) {
+      enableCount = true;
+    }
+  }
+  return count;
+}
+
 PYBIND11_MODULE(_pedometer, m) {
   py::class_<Pedometer>(m, "Pedometer")
       .def(py::init<const std::array<std::vector<double>, 3> &>())
       .def("Process", &Pedometer::Process)
+      .def("CountSteps", &Pedometer::CountSteps)
       .def_readonly("accUser", &Pedometer::accUser)
       .def_readonly("accGravity", &Pedometer::accGravity)
       .def_readonly("accOrigin", &Pedometer::accOrigin)

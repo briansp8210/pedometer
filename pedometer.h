@@ -34,6 +34,7 @@ class Pedometer {
   Pedometer(const std::array<std::vector<double>, 3> &data);
 
   void Process();
+  size_t CountSteps();
 
   // The frontend will uses these membersto showcase the intermediate results
   std::array<std::vector<double>, 3> accUser, accGravity;
@@ -42,6 +43,12 @@ class Pedometer {
   std::vector<double> acc;
 
  private:
+  // Used to eliminate short peaks. This could happen when user using their
+  // device while walking.
+  static constexpr double kStepAccelerationHighThreShold = 0.1;
+  // Used to eliminate bumpy peaks.
+  static constexpr double kStepAccelerationLowThreShold = 0;
+
   void IsolateUserComponentAtGravityDirection(
       const std::array<std::vector<double>, 3> &accUser,
       const std::array<std::vector<double>, 3> &accGravity);

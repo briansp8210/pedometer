@@ -67,3 +67,5 @@ PlotAcceleration(pltAccNoSlowPeaks, 'After eliminating slow peaks',
 fig.tight_layout()
 fig.show()
 fig.savefig("2.png", dpi=100)
+
+print("Step counts: {}".format(pdm.CountSteps()))
